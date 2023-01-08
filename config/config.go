@@ -1,0 +1,45 @@
+package config
+
+import (
+	"strings"
+
+	"github.com/spf13/viper"
+)
+
+type Config struct {
+	App   *App
+	MySQL *MySQL
+}
+
+type App struct {
+	Port string
+}
+
+type MySQL struct {
+	Host              string
+	Port              int
+	Database          string
+	Username          string
+	Password          string
+	ConnectionTimeout int
+}
+
+func Read() *Config {
+	conf := &Config{}
+
+	viper.SetConfigFile("config/config.yaml")
+	viper.AutomaticEnv()
+
+	// For env variables, so it would be like MYSQL_HOST
+	viper.SetEnvKeyReplacer(strings.NewReplacer(`.`, `_`))
+
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
+
+	if err := viper.Unmarshal(conf); err != nil {
+		panic(err)
+	}
+
+	return conf
+}
