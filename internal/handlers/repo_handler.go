@@ -115,7 +115,10 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 			})
 		}
 	}
-	timestamp := repo.Timestamp.Format(time.RFC3339)
+	var timestamp string
+	if repo.Timestamp != nil {
+		timestamp = repo.Timestamp.Format(time.RFC3339)
+	}
 
 	return ctx.JSON(payloads.GenericResponse{
 		Status: constants.ResponseStatusOK,

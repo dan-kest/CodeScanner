@@ -2,6 +2,8 @@ app:
   port: 3000
   paging:
     maxItemPerPage: 20
+  scan:
+    repoPath: /tmp/cscanner/git-repo/
 
 postgres:
   host: localhost

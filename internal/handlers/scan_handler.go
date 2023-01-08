@@ -10,7 +10,6 @@ import (
 	"github.com/dan-kest/cscanner/internal/services"
 	"github.com/google/uuid"
 	"github.com/rabbitmq/amqp091-go"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type ScanHandler struct {
@@ -48,7 +47,7 @@ func (h *ScanHandler) GetTask() {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,  // auto-ack
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -62,7 +61,9 @@ func (h *ScanHandler) GetTask() {
 
 	go func() {
 		for d := range msgs {
-			h.handleTask(&d)
+			h.handleTask(d.Body)
+
+			d.Ack(false)
 		}
 	}()
 
@@ -70,17 +71,17 @@ func (h *ScanHandler) GetTask() {
 	<-forever
 }
 
-func (h *ScanHandler) handleTask(d *amqp.Delivery) {
-	var task *models.Task
-	if err := json.Unmarshal(d.Body, task); err != nil {
-		h.handleErrorTask(d.Body, err)
+func (h *ScanHandler) handleTask(body []byte) {
+	var task models.Task
+	if err := json.Unmarshal(body, &task); err != nil {
+		h.handleErrorTask(body, err)
 
 		return
 	}
 
 	repositoryID, err := uuid.Parse(task.RepositoryIDStr)
 	if err != nil {
-		h.handleErrorTask(d.Body, err)
+		h.handleErrorTask(body, err)
 
 		return
 	}
@@ -88,13 +89,13 @@ func (h *ScanHandler) handleTask(d *amqp.Delivery) {
 
 	scanID, err := uuid.Parse(task.ScanIDStr)
 	if err != nil {
-		h.handleErrorTask(d.Body, err)
+		h.handleErrorTask(body, err)
 
 		return
 	}
 	task.ScanID = scanID
 
-	h.scanService.RunTask(task)
+	h.scanService.RunTask(&task)
 }
 
 func (h *ScanHandler) handleErrorTask(body []byte, err error) {

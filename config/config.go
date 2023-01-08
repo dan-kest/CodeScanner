@@ -15,10 +15,15 @@ type Config struct {
 type App struct {
 	Port   string
 	Paging *Paging
+	Scan   *Scan
 }
 
 type Paging struct {
 	MaxItemPerPage int
+}
+
+type Scan struct {
+	RepoPath string
 }
 
 type Postgres struct {
