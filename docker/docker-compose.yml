@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  mysql:
+    container_name: 'mysql'
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+    ports:
+      - '${MYSQL_PORT}:3306'
+    volumes:
+      - 'my-db:${MYSQL_DATA_VOLUMN}'
+
+  rabbitmq:
+    container_name: 'rabbitmq'
+    image: rabbitmq:3-management-alpine
+    restart: always
+    hostname: myrabbitmq
+    ports:
+        - '${RABBITMQ_PORT}:5672'
+        - '${RABBITMQ_MANAGEMENT_PORT}:15672'
+    volumes:
+        - '~/.docker-conf/rabbitmq/data/:${RABBITMQ_DATA_VOLUMN}'
+        - '~/.docker-conf/rabbitmq/log/:${RABBITMQ_LOG_VOLUMN}'
+
+volumes:
+  my-db:
