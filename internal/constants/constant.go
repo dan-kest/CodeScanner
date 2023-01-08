@@ -15,3 +15,15 @@ const (
 	ResponseStatusOK    = "OK"
 	ResponseStatusError = "ERROR"
 )
+
+const (
+	RabbitMQWaitingPrompt     = " [*] Waiting for messages. To exit press CTRL+C"
+	RabbitMQErrorOpenChannel  = "Failed to open a channel"
+	RabbitMQErrorDeclareQueue = "Failed to declare a queue"
+	RabbitMQErrorPublish      = "Failed to publish a message"
+	RabbitMQErrorConsume      = "Failed to register a consumer"
+)
+
+const (
+	MIMETypeApplicationJSON = "application/json"
+)

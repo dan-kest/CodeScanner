@@ -34,6 +34,6 @@ func initilize(conf *config.Config, app *fiber.App, db *gorm.DB, qConn *amqp091.
 	repoRepository := repositories.NewRepoRepository(conf, db)
 	scanRepository := repositories.NewScanRepository(conf, db)
 	repoService := services.NewRepoService(conf, repoRepository, scanRepository)
-	repoHandler := handlers.NewRepoHandler(qConn, repoService)
+	repoHandler := handlers.NewRepoHandler(conf, qConn, repoService)
 	routers.RegisterRepoRoute(api, repoHandler)
 }

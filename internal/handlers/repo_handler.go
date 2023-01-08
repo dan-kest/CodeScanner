@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/dan-kest/cscanner/config"
 	"github.com/dan-kest/cscanner/internal/constants"
 	"github.com/dan-kest/cscanner/internal/handlers/payloads"
 	"github.com/dan-kest/cscanner/internal/models"
@@ -15,12 +17,14 @@ import (
 )
 
 type RepoHandler struct {
+	conf        *config.Config
 	qConn       *amqp091.Connection
 	repoService *services.RepoService
 }
 
-func NewRepoHandler(qConn *amqp091.Connection, repoService *services.RepoService) *RepoHandler {
+func NewRepoHandler(conf *config.Config, qConn *amqp091.Connection, repoService *services.RepoService) *RepoHandler {
 	return &RepoHandler{
+		conf:        conf,
 		qConn:       qConn,
 		repoService: repoService,
 	}
@@ -145,7 +149,12 @@ func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 		URL:             payload.URL,
 		Timestamp:       time.Now().UTC().Format(time.RFC3339),
 	}
-	if err := h.publish(task); err != nil {
+	body, err := json.Marshal(task)
+	if err != nil {
+		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
+	}
+	timeout := h.conf.RabbitMQ.PublishTimeout
+	if err := publishMessage(h.qConn, h.conf.RabbitMQ.Queue.Name, body, timeout); err != nil {
 		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 

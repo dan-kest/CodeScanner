@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Build pagination query for GORM
 func buildPaging(tx *gorm.DB, conf *config.Config, paging *models.Paging) *gorm.DB {
 	if paging.ItemPerPage > 0 && paging.Page > 0 {
 		if paging.ItemPerPage > conf.App.Paging.MaxItemPerPage {

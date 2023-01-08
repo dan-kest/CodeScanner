@@ -17,5 +17,6 @@ rabbitmq:
   port: 5672
   username: guest
   password: guest
+  publishTimeout: 5000
   queue:
     name: scanner

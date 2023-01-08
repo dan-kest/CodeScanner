@@ -32,11 +32,12 @@ type Postgres struct {
 }
 
 type RabbitMQ struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
-	Queue    *Queue
+	Host           string
+	Port           int
+	Username       string
+	Password       string
+	PublishTimeout int
+	Queue          *Queue
 }
 
 type Queue struct {

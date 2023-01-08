@@ -19,5 +19,5 @@ func main() {
 	dbConn := database.Connect(conf.Postgres)
 	qConn := queue.Connect(conf.RabbitMQ)
 
-	queue.InitConsumer(conf, dbConn, qConn)
+	queue.InitializeConsumer(conf, dbConn, qConn)
 }
