@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/dan-kest/cscanner/config"
@@ -10,6 +12,7 @@ import (
 	"github.com/dan-kest/cscanner/internal/repositories/tables"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type repoRepository struct {
@@ -30,6 +33,14 @@ func (r *repoRepository) ListRepo(paging *models.Paging) ([]*models.Repo, int, e
 
 	tx := database.WithTimeout(r.dbConn)
 	tx.Model(&rows).Count(&totalCount)
+	tx = tx.Preload("ScanHistoryList", func(tx *gorm.DB) *gorm.DB {
+		return tx.Limit(1).Order(clause.OrderByColumn{
+			Column: clause.Column{
+				Name: "id",
+			},
+			Desc: true,
+		})
+	})
 	tx = buildPaging(tx, r.conf, paging)
 	if result := tx.Find(&rows); result.Error != nil {
 		return nil, 0, result.Error
@@ -37,39 +48,57 @@ func (r *repoRepository) ListRepo(paging *models.Paging) ([]*models.Repo, int, e
 
 	repoList := []*models.Repo{}
 	for _, row := range rows {
-		repoList = append(repoList, &models.Repo{
+		repo := &models.Repo{
 			ID:   row.ID,
 			Name: row.Name,
 			URL:  row.URL,
-			// TODO: Map the rest
-		})
+		}
+		if len(row.ScanHistoryList) > 0 {
+			repo.ScanStatus = models.ScanStatus(row.ScanHistoryList[0].Status)
+		}
+
+		repoList = append(repoList, repo)
 	}
 
 	return repoList, int(totalCount), nil
 }
 
 func (r *repoRepository) ViewRepo(id uuid.UUID) (*models.Repo, error) {
-	rows := []tables.Repository{}
-
-	filter := tables.Repository{
-		ID: id,
-	}
+	row := tables.Repository{}
 
 	tx := database.WithTimeout(r.dbConn)
+	tx = tx.Preload("ScanHistoryList", func(tx *gorm.DB) *gorm.DB {
+		return tx.Limit(1).Order(clause.OrderByColumn{
+			Column: clause.Column{
+				Name: "id",
+			},
+			Desc: true,
+		})
+	}).
+		Preload("ScanHistoryList.ScanResult")
 
-	if result := tx.Find(&rows, &filter); result.Error != nil {
+	if result := tx.First(&row, id); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("id %s", constants.ErrorNotFoundSuffix)
+		}
+
 		return nil, result.Error
 	}
 
-	if len(rows) == 0 {
-		return nil, fmt.Errorf("id %s", constants.ErrorNotFoundSuffix)
-	}
-
 	repo := &models.Repo{
-		ID:   rows[0].ID,
-		Name: rows[0].Name,
-		URL:  rows[0].URL,
-		// TODO: Map the rest
+		ID:   row.ID,
+		Name: row.Name,
+		URL:  row.URL,
+	}
+	if len(row.ScanHistoryList) > 0 {
+		repo.ScanStatus = models.ScanStatus(row.ScanHistoryList[0].Status)
+
+		scanResult := row.ScanHistoryList[0].ScanResult
+		if scanResult != nil && scanResult.Result != "" {
+			if err := json.Unmarshal([]byte(scanResult.Result), repo); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return repo, nil
