@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dan-kest/cscanner/internal/constants"
+	"github.com/dan-kest/cscanner/internal/handlers/payloads"
 	"github.com/dan-kest/cscanner/internal/models"
 	"github.com/dan-kest/cscanner/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -22,26 +23,17 @@ func NewRepoHandler(repoService *services.RepoService) *RepoHandler {
 	}
 }
 
-type RepoPayload struct {
-	Name *string `json:"name"`
-	URL  *string `json:"url"`
-}
-
 func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 	pageStr := ctx.Query("page")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'page' must be a number",
-		})
+		return SendError(ctx, fiber.StatusBadRequest, "'page' must be a number")
 	}
 
 	itemStr := ctx.Query("item")
 	item, err := strconv.Atoi(itemStr)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'item' must be a number",
-		})
+		return SendError(ctx, fiber.StatusBadRequest, "'page' must be a number")
 	}
 
 	paging := &models.Paging{
@@ -51,28 +43,37 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 
 	repoPagination, err := h.repoService.ListRepo(paging)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Message: err.Error(),
+		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
+	}
+
+	itemList := []*payloads.RepoResponse{}
+	for _, item := range repoPagination.ItemList {
+		timestamp := item.Timestamp.Format(time.RFC3339)
+		itemList = append(itemList, &payloads.RepoResponse{
+			ID:         item.ID.String(),
+			Name:       item.Name.String(),
+			URL:        item.URL.String(),
+			ScanStatus: (*string)(&item.ScanStatus),
+			Timestamp:  &timestamp,
 		})
 	}
 
-	repoNameListStr := ""
-	comma := ""
-	for _, repo := range repoPagination.ItemList {
-		repoNameListStr += fmt.Sprintf("%s'%s'", comma, repo.Name.Val)
-		comma = ","
-	}
-
-	return ctx.JSON(fmt.Sprintf("list: count=%d items=%s", repoPagination.TotalCount, repoNameListStr))
+	return ctx.JSON(payloads.GenericResponse{
+		Status: "OK",
+		Data: payloads.ListRepoResponse{
+			Page:        repoPagination.Page,
+			ItemPerPage: repoPagination.ItemPerPage,
+			TotalCount:  repoPagination.ItemPerPage,
+			ItemList:    itemList,
+		},
+	})
 }
 
 func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "invalid id",
-		})
+		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
 	repo, err := h.repoService.ViewRepo(id)
@@ -82,34 +83,64 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 			statusCode = fiber.StatusNotFound
 		}
 
-		return ctx.Status(statusCode).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
+		return SendError(ctx, statusCode, err.Error())
 	}
 
-	return ctx.JSON("view: " + repo.Name.Val + "; " + repo.URL.Val)
+	var findingList []*payloads.Finding
+	if len(repo.Findings) > 0 {
+		findingList = []*payloads.Finding{}
+		for _, finding := range repo.Findings {
+			findingList = append(findingList, &payloads.Finding{
+				Type:   finding.Type,
+				RuleID: finding.RuleID,
+				Location: payloads.FindingLocation{
+					Path: finding.Location.Path,
+					Positions: payloads.FindingLocationPosition{
+						Begin: payloads.FindingLocationPositionBegin{
+							Line: finding.Location.Positions.Begin.Line,
+						},
+					},
+				},
+				Metadata: payloads.FindingMetadata{
+					Description: finding.Metadata.Description,
+					Severity:    finding.Metadata.Severity,
+				},
+			})
+		}
+	}
+	timestamp := repo.Timestamp.Format(time.RFC3339)
+
+	return ctx.JSON(payloads.GenericResponse{
+		Status: "OK",
+		Data: payloads.RepoResponse{
+			ID:         repo.ID.String(),
+			Name:       repo.Name.String(),
+			URL:        repo.URL.String(),
+			ScanStatus: (*string)(&repo.ScanStatus),
+			Timestamp:  &timestamp,
+			Findings:   findingList,
+		},
+	})
 }
 
 func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "invalid id",
-		})
+		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
 	h.repoService.ScanRepo(id)
 
-	return ctx.JSON("scan")
+	return ctx.JSON(payloads.GenericResponse{
+		Status: "OK",
+	})
 }
 
 func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
-	payload := &RepoPayload{}
+	payload := &payloads.RepoRequest{}
 	if err := ctx.BodyParser(payload); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
+		return SendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
 	repo := &models.Repo{}
@@ -122,28 +153,25 @@ func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
 
 	id, err := h.repoService.CreateRepo(repo)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
+		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON("create: " + id.String())
+	return ctx.JSON(payloads.GenericResponse{
+		Status: "OK",
+		Data:   id.String(),
+	})
 }
 
 func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "invalid id",
-		})
+		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
-	payload := &RepoPayload{}
+	payload := &payloads.RepoRequest{}
 	if err := ctx.BodyParser(payload); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
+		return SendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
 	repo := &models.Repo{}
@@ -155,28 +183,26 @@ func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 	}
 
 	if err := h.repoService.UpdateRepo(id, repo); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
+		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON("update: OK")
+	return ctx.JSON(payloads.GenericResponse{
+		Status: "OK",
+	})
 }
 
 func (h *RepoHandler) DeleteRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "invalid id",
-		})
+		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
 	if err := h.repoService.DeleteRepo(id); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
-			Message: err.Error(),
-		})
+		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON("delete: OK")
+	return ctx.JSON(payloads.GenericResponse{
+		Status: "OK",
+	})
 }

@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/dan-kest/cscanner/pkg/null"
 	"github.com/google/uuid"
 )
@@ -18,7 +20,7 @@ type Repo struct {
 	URL        null.String
 	ScanStatus ScanStatus
 	Findings   []*Finding `json:"findings"`
-	Timestamp  string
+	Timestamp  *time.Time
 }
 
 type ScanStatus string
