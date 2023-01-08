@@ -27,13 +27,13 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 	pageStr := ctx.Query("page")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, "'page' must be a number")
+		return sendError(ctx, fiber.StatusBadRequest, "'page' must be a number")
 	}
 
 	itemStr := ctx.Query("item")
 	item, err := strconv.Atoi(itemStr)
 	if err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, "'page' must be a number")
+		return sendError(ctx, fiber.StatusBadRequest, "'page' must be a number")
 	}
 
 	paging := &models.Paging{
@@ -43,7 +43,7 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 
 	repoPagination, err := h.repoService.ListRepo(paging)
 	if err != nil {
-		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
+		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
 	itemList := []*payloads.RepoResponse{}
@@ -73,7 +73,7 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
+		return sendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
 	repo, err := h.repoService.ViewRepo(id)
@@ -83,7 +83,7 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 			statusCode = fiber.StatusNotFound
 		}
 
-		return SendError(ctx, statusCode, err.Error())
+		return sendError(ctx, statusCode, err.Error())
 	}
 
 	var findingList []*payloads.Finding
@@ -127,7 +127,7 @@ func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
+		return sendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
 	h.repoService.ScanRepo(id)
@@ -140,7 +140,7 @@ func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
 	payload := &payloads.RepoRequest{}
 	if err := ctx.BodyParser(payload); err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, err.Error())
+		return sendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
 	repo := &models.Repo{}
@@ -153,7 +153,7 @@ func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
 
 	id, err := h.repoService.CreateRepo(repo)
 	if err != nil {
-		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
+		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
@@ -166,12 +166,12 @@ func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
+		return sendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
 	payload := &payloads.RepoRequest{}
 	if err := ctx.BodyParser(payload); err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, err.Error())
+		return sendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
 	repo := &models.Repo{}
@@ -183,7 +183,7 @@ func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 	}
 
 	if err := h.repoService.UpdateRepo(id, repo); err != nil {
-		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
+		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
@@ -195,11 +195,11 @@ func (h *RepoHandler) DeleteRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return SendError(ctx, fiber.StatusBadRequest, "invalid id")
+		return sendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
 	if err := h.repoService.DeleteRepo(id); err != nil {
-		return SendError(ctx, fiber.StatusInternalServerError, err.Error())
+		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
