@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/dan-kest/cscanner/config"
-	"github.com/dan-kest/cscanner/consumer"
 	"github.com/dan-kest/cscanner/database"
+	"github.com/dan-kest/cscanner/queue"
 )
 
 func failOnError(err error, msg string) {
@@ -18,5 +18,5 @@ func main() {
 	conf := config.Read()
 	db := database.Connect(conf.Postgres)
 
-	consumer.InitConsumer(conf, db)
+	queue.InitConsumer(conf, db)
 }
