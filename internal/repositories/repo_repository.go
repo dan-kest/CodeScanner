@@ -106,12 +106,6 @@ func (r *repoRepository) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 	return repo, nil
 }
 
-func (r *repoRepository) ScanRepo(id uuid.UUID) error {
-	// TODO: ???
-
-	return nil
-}
-
 func (r *repoRepository) CreateRepo(repo *models.Repo) (*uuid.UUID, error) {
 	row := tables.Repository{
 		Name: repo.Name,

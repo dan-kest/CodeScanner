@@ -1,41 +1,20 @@
 package queue
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/dan-kest/cscanner/config"
 	"github.com/dan-kest/cscanner/internal/handlers"
 	"github.com/dan-kest/cscanner/internal/repositories"
 	"github.com/dan-kest/cscanner/internal/services"
-	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/rabbitmq/amqp091-go"
 	"gorm.io/gorm"
 )
 
-func failOnError(err error, message string) {
-	if err != nil {
-		log.Panicf("%s: %s", message, err)
-	}
-}
-
-func buildURL(config *config.RabbitMQ) string {
-	return fmt.Sprintf("amqp://%s:%s@%s:%d/",
-		config.Username,
-		config.Password,
-		config.Host,
-		config.Port,
-	)
-}
-
-func InitConsumer(conf *config.Config, db *gorm.DB) {
+func InitConsumer(conf *config.Config, dbConn *gorm.DB, qConn *amqp091.Connection) {
 	// ===== Connect to message queue =====
 
-	url := buildURL(conf.RabbitMQ)
-	conn, err := amqp.Dial(url)
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
-
-	ch, err := conn.Channel()
+	ch, err := qConn.Channel()
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
@@ -63,7 +42,7 @@ func InitConsumer(conf *config.Config, db *gorm.DB) {
 
 	// ===== Init service =====
 
-	scanRepository := repositories.NewScanRepository(conf, db)
+	scanRepository := repositories.NewScanRepository(conf, dbConn)
 	scanService := services.NewScanService(conf, scanRepository)
 	scanHandler := handlers.NewScanHandler(scanService)
 

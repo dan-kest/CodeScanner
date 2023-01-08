@@ -10,12 +10,14 @@ import (
 type RepoService struct {
 	conf           *config.Config
 	repoRepository interfaces.RepoRepository
+	scanRepository interfaces.ScanRepository
 }
 
-func NewRepoService(conf *config.Config, repoRepository interfaces.RepoRepository) *RepoService {
+func NewRepoService(conf *config.Config, repoRepository interfaces.RepoRepository, scanRepository interfaces.ScanRepository) *RepoService {
 	return &RepoService{
 		conf:           conf,
 		repoRepository: repoRepository,
+		scanRepository: scanRepository,
 	}
 }
 
@@ -44,8 +46,14 @@ func (s *RepoService) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 	return repo, nil
 }
 
-func (s *RepoService) ScanRepo(id uuid.UUID) error {
-	return s.repoRepository.ScanRepo(id)
+func (s *RepoService) ScanRepo(id uuid.UUID, scanID uuid.UUID) error {
+	task := &models.Task{
+		RepositoryID: id,
+		ScanID:       scanID,
+		Status:       models.ScanStatusQueued,
+	}
+
+	return s.scanRepository.CreateScanHistory(task)
 }
 
 func (s *RepoService) CreateRepo(repo *models.Repo) (*uuid.UUID, error) {

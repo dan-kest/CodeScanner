@@ -10,7 +10,7 @@ func RegisterRepoRoute(router fiber.Router, handler *handlers.RepoHandler) {
 
 	cScanner.Get("/list", handler.ListRepo)
 	cScanner.Get("/:id", handler.ViewRepo)
-	cScanner.Post("/scan/:id", handler.ScanRepo)
+	cScanner.Post("/scan", handler.ScanRepo)
 	cScanner.Post("/", handler.CreateRepo)
 	cScanner.Put("/:id", handler.UpdateRepo)
 	cScanner.Delete("/:id", handler.DeleteRepo)

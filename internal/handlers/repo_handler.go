@@ -11,14 +11,17 @@ import (
 	"github.com/dan-kest/cscanner/internal/services"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type RepoHandler struct {
+	qConn       *amqp091.Connection
 	repoService *services.RepoService
 }
 
-func NewRepoHandler(repoService *services.RepoService) *RepoHandler {
+func NewRepoHandler(qConn *amqp091.Connection, repoService *services.RepoService) *RepoHandler {
 	return &RepoHandler{
+		qConn:       qConn,
 		repoService: repoService,
 	}
 }
@@ -59,7 +62,7 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
-		Status: "OK",
+		Status: constants.ResponseStatusOK,
 		Data: payloads.ListRepoResponse{
 			Page:        repoPagination.Page,
 			ItemPerPage: repoPagination.ItemPerPage,
@@ -111,7 +114,7 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 	timestamp := repo.Timestamp.Format(time.RFC3339)
 
 	return ctx.JSON(payloads.GenericResponse{
-		Status: "OK",
+		Status: constants.ResponseStatusOK,
 		Data: payloads.RepoResponse{
 			ID:         repo.ID.String(),
 			Name:       repo.Name.String(),
@@ -124,16 +127,34 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 }
 
 func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
-	idStr := ctx.Params("id")
-	id, err := uuid.Parse(idStr)
+	payload := &payloads.ScanRequest{}
+	if err := ctx.BodyParser(payload); err != nil {
+		return sendError(ctx, fiber.StatusBadRequest, err.Error())
+	}
+
+	id, err := uuid.Parse(payload.ID)
 	if err != nil {
 		return sendError(ctx, fiber.StatusBadRequest, "invalid id")
 	}
 
-	h.repoService.ScanRepo(id)
+	scanID := uuid.New()
+
+	task := &models.Task{
+		RepositoryIDStr: payload.ID,
+		ScanIDStr:       scanID.String(),
+		URL:             payload.URL,
+		Timestamp:       time.Now().UTC().Format(time.RFC3339),
+	}
+	if err := h.publish(task); err != nil {
+		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
+	}
+
+	if err := h.repoService.ScanRepo(id, scanID); err != nil {
+		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
+	}
 
 	return ctx.JSON(payloads.GenericResponse{
-		Status: "OK",
+		Status: constants.ResponseStatusOK,
 	})
 }
 
@@ -157,7 +178,7 @@ func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
-		Status: "OK",
+		Status: constants.ResponseStatusOK,
 		Data:   id.String(),
 	})
 }
@@ -187,7 +208,7 @@ func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
-		Status: "OK",
+		Status: constants.ResponseStatusOK,
 	})
 }
 
@@ -203,6 +224,6 @@ func (h *RepoHandler) DeleteRepo(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
-		Status: "OK",
+		Status: constants.ResponseStatusOK,
 	})
 }

@@ -10,3 +10,8 @@ const (
 	FindingExposedDesc  = "Exposed sensitive information."
 	FindingSeverityHigh = "HIGH"
 )
+
+const (
+	ResponseStatusOK    = "OK"
+	ResponseStatusError = "ERROR"
+)

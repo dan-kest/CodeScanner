@@ -5,6 +5,11 @@ type RepoRequest struct {
 	URL  *string `json:"url,omitempty"`
 }
 
+type ScanRequest struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
 type GenericResponse struct {
 	Status  string      `json:"status"`
 	Data    interface{} `json:"data,omitempty"`

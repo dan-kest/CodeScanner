@@ -16,7 +16,8 @@ func failOnError(err error, msg string) {
 
 func main() {
 	conf := config.Read()
-	db := database.Connect(conf.Postgres)
+	dbConn := database.Connect(conf.Postgres)
+	qConn := queue.Connect(conf.RabbitMQ)
 
-	queue.InitConsumer(conf, db)
+	queue.InitConsumer(conf, dbConn, qConn)
 }

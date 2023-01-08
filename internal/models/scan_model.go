@@ -9,5 +9,5 @@ type Task struct {
 	ScanID          uuid.UUID
 	URL             string `json:"url"`
 	Timestamp       string `json:"timestamp"`
-	Status          string
+	Status          ScanStatus
 }

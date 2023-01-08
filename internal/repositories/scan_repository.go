@@ -24,7 +24,7 @@ func (r *scanRepository) CreateScanHistory(scanHistory *models.Task) error {
 	row := tables.ScanHistory{
 		RepositoryID: scanHistory.RepositoryID,
 		ScanID:       scanHistory.ScanID,
-		Status:       scanHistory.Status,
+		Status:       string(scanHistory.Status),
 	}
 
 	tx := database.WithTimeout(r.dbConn)
@@ -40,7 +40,7 @@ func (r *scanRepository) CreateScanHistoryAndResult(scanHistory *models.Task, re
 	scanHistoryRow := tables.ScanHistory{
 		RepositoryID: scanHistory.RepositoryID,
 		ScanID:       scanHistory.ScanID,
-		Status:       scanHistory.Status,
+		Status:       string(scanHistory.Status),
 	}
 
 	scanResultRow := tables.ScanResult{
