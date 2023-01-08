@@ -22,6 +22,7 @@ type Postgres struct {
 	Username          string
 	Password          string
 	ConnectionTimeout int
+	IsPrintLog        bool
 }
 
 func Read() *Config {

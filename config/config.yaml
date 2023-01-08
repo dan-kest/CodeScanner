@@ -8,3 +8,4 @@ postgres:
   username: root
   password: password
   connectionTimeout: 60000
+  isPrintLog: true
