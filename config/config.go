@@ -7,15 +7,15 @@ import (
 )
 
 type Config struct {
-	App   *App
-	MySQL *MySQL
+	App      *App
+	Postgres *Postgres
 }
 
 type App struct {
 	Port string
 }
 
-type MySQL struct {
+type Postgres struct {
 	Host              string
 	Port              int
 	Database          string
