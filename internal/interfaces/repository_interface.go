@@ -13,3 +13,9 @@ type RepoRepository interface {
 	UpdateRepo(id uuid.UUID, repo *models.Repo) error
 	DeleteRepo(id uuid.UUID) error
 }
+
+type ScanRepository interface {
+	CreateScanHistory(scanHistory *models.Task) error
+	CreateScanHistoryAndResult(scanHistory *models.Task, result string) error
+	CreateTaskErrorLog(body []byte, err error) error
+}

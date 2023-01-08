@@ -9,6 +9,7 @@ import (
 type Config struct {
 	App      *App
 	Postgres *Postgres
+	RabbitMQ *RabbitMQ
 }
 
 type App struct {
@@ -28,6 +29,18 @@ type Postgres struct {
 	Password          string
 	ConnectionTimeout int
 	IsPrintLog        bool
+}
+
+type RabbitMQ struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	Queue    *Queue
+}
+
+type Queue struct {
+	Name string
 }
 
 func Read() *Config {
