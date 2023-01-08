@@ -1,5 +1,7 @@
 app:
   port: 3000
+  paging:
+    maxItemPerPage: 20
 
 postgres:
   host: localhost

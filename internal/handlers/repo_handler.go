@@ -1,11 +1,15 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/dan-kest/cscanner/internal/constants"
 	"github.com/dan-kest/cscanner/internal/models"
 	"github.com/dan-kest/cscanner/internal/services"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type RepoHandler struct {
@@ -28,7 +32,7 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'page' must be a number.",
+			Message: "'page' must be a number",
 		})
 	}
 
@@ -36,7 +40,7 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 	item, err := strconv.Atoi(itemStr)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'item' must be a number.",
+			Message: "'item' must be a number",
 		})
 	}
 
@@ -45,31 +49,53 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 		ItemPerPage: item,
 	}
 
-	h.repoService.ListRepo(paging)
+	repoPagination, err := h.repoService.ListRepo(paging)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 
-	return ctx.JSON("list")
+	repoNameListStr := ""
+	comma := ""
+	for _, repo := range repoPagination.ItemList {
+		repoNameListStr += fmt.Sprintf("%s'%s'", comma, repo.Name.Val)
+		comma = ","
+	}
+
+	return ctx.JSON(fmt.Sprintf("list: count=%d items=%s", repoPagination.TotalCount, repoNameListStr))
 }
 
 func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'id' must be a number.",
+			Message: "invalid id",
 		})
 	}
 
-	h.repoService.ViewRepo(id)
+	repo, err := h.repoService.ViewRepo(id)
+	if err != nil {
+		statusCode := fiber.StatusInternalServerError
+		if strings.HasSuffix(err.Error(), constants.ErrorNotFoundSuffix) {
+			statusCode = fiber.StatusNotFound
+		}
 
-	return ctx.JSON("view")
+		return ctx.Status(statusCode).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return ctx.JSON("view: " + repo.Name.Val + "; " + repo.URL.Val)
 }
 
 func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'id' must be a number.",
+			Message: "invalid id",
 		})
 	}
 
@@ -94,17 +120,22 @@ func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
 		repo.URL.Set(*payload.URL)
 	}
 
-	h.repoService.CreateRepo(repo)
+	id, err := h.repoService.CreateRepo(repo)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 
-	return ctx.JSON("create")
+	return ctx.JSON("create: " + id.String())
 }
 
 func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'id' must be a number.",
+			Message: "invalid id",
 		})
 	}
 
@@ -123,21 +154,29 @@ func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 		repo.URL.Set(*payload.URL)
 	}
 
-	h.repoService.UpdateRepo(id, repo)
+	if err := h.repoService.UpdateRepo(id, repo); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 
-	return ctx.JSON("update")
+	return ctx.JSON("update: OK")
 }
 
 func (h *RepoHandler) DeleteRepo(ctx *fiber.Ctx) error {
 	idStr := ctx.Params("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Message: "'id' must be a number.",
+			Message: "invalid id",
 		})
 	}
 
-	h.repoService.DeleteRepo(id)
+	if err := h.repoService.DeleteRepo(id); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 
-	return ctx.JSON("delete")
+	return ctx.JSON("delete: OK")
 }

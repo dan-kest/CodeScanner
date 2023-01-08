@@ -2,10 +2,18 @@ package models
 
 import (
 	"github.com/dan-kest/cscanner/pkg/null"
+	"github.com/google/uuid"
 )
 
+type RepoPagination struct {
+	Page        int
+	ItemPerPage int
+	TotalCount  int
+	ItemList    []*Repo
+}
+
 type Repo struct {
-	ID         int
+	ID         uuid.UUID
 	Name       null.String
 	URL        null.String
 	ScanStatus ScanStatus
@@ -14,6 +22,13 @@ type Repo struct {
 }
 
 type ScanStatus string
+
+const (
+	ScanStatusQueued     ScanStatus = "Queued"
+	ScanStatusInProgress ScanStatus = "In Progress"
+	ScanStatusSuccess    ScanStatus = "Success"
+	ScanStatusFailure    ScanStatus = "Failure"
+)
 
 type Finding struct {
 	Type     string          `json:"type"`

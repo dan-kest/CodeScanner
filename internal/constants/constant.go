@@ -1,12 +1,7 @@
 package constants
 
-import "github.com/dan-kest/cscanner/internal/models"
-
 const (
-	ScanStatusQueued     models.ScanStatus = "Queued"
-	ScanStatusInProgress models.ScanStatus = "In Progress"
-	ScanStatusSuccess    models.ScanStatus = "Success"
-	ScanStatusFailure    models.ScanStatus = "Failure"
+	ErrorNotFoundSuffix = "not found"
 )
 
 const (

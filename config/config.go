@@ -12,7 +12,12 @@ type Config struct {
 }
 
 type App struct {
-	Port string
+	Port   string
+	Paging *Paging
+}
+
+type Paging struct {
+	MaxItemPerPage int
 }
 
 type Postgres struct {

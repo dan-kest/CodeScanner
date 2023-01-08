@@ -4,6 +4,7 @@ import (
 	"github.com/dan-kest/cscanner/config"
 	"github.com/dan-kest/cscanner/internal/interfaces"
 	"github.com/dan-kest/cscanner/internal/models"
+	"github.com/google/uuid"
 )
 
 type RepoService struct {
@@ -18,16 +19,23 @@ func NewRepoService(conf *config.Config, repoRepository interfaces.RepoRepositor
 	}
 }
 
-func (s *RepoService) ListRepo(paging *models.Paging) ([]*models.Repo, error) {
-	repoList, err := s.repoRepository.ListRepo(paging)
+func (s *RepoService) ListRepo(paging *models.Paging) (*models.RepoPagination, error) {
+	repoList, totalCount, err := s.repoRepository.ListRepo(paging)
 	if err != nil {
 		return nil, err
 	}
 
-	return repoList, nil
+	repoPagination := &models.RepoPagination{
+		Page:        paging.Page,
+		ItemPerPage: paging.ItemPerPage,
+		TotalCount:  totalCount,
+		ItemList:    repoList,
+	}
+
+	return repoPagination, nil
 }
 
-func (s *RepoService) ViewRepo(id int) (*models.Repo, error) {
+func (s *RepoService) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 	repo, err := s.repoRepository.ViewRepo(id)
 	if err != nil {
 		return nil, err
@@ -36,18 +44,18 @@ func (s *RepoService) ViewRepo(id int) (*models.Repo, error) {
 	return repo, nil
 }
 
-func (s *RepoService) ScanRepo(id int) error {
+func (s *RepoService) ScanRepo(id uuid.UUID) error {
 	return s.repoRepository.ScanRepo(id)
 }
 
-func (s *RepoService) CreateRepo(repo *models.Repo) error {
+func (s *RepoService) CreateRepo(repo *models.Repo) (*uuid.UUID, error) {
 	return s.repoRepository.CreateRepo(repo)
 }
 
-func (s *RepoService) UpdateRepo(id int, repo *models.Repo) error {
+func (s *RepoService) UpdateRepo(id uuid.UUID, repo *models.Repo) error {
 	return s.repoRepository.UpdateRepo(id, repo)
 }
 
-func (s *RepoService) DeleteRepo(id int) error {
+func (s *RepoService) DeleteRepo(id uuid.UUID) error {
 	return s.repoRepository.DeleteRepo(id)
 }

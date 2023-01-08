@@ -1,12 +1,15 @@
 package interfaces
 
-import "github.com/dan-kest/cscanner/internal/models"
+import (
+	"github.com/dan-kest/cscanner/internal/models"
+	"github.com/google/uuid"
+)
 
 type RepoRepository interface {
-	ListRepo(paging *models.Paging) ([]*models.Repo, error)
-	ViewRepo(id int) (*models.Repo, error)
-	CreateRepo(repo *models.Repo) error
-	UpdateRepo(id int, repo *models.Repo) error
-	DeleteRepo(id int) error
-	ScanRepo(id int) error
+	ListRepo(paging *models.Paging) ([]*models.Repo, int, error)
+	ViewRepo(id uuid.UUID) (*models.Repo, error)
+	CreateRepo(repo *models.Repo) (*uuid.UUID, error)
+	UpdateRepo(id uuid.UUID, repo *models.Repo) error
+	DeleteRepo(id uuid.UUID) error
+	ScanRepo(id uuid.UUID) error
 }
