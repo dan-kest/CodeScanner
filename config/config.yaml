@@ -1,7 +1,7 @@
 app:
   port: 3000
   paging:
-    maxItemPerPage: 20
+    maxItemPerPage: 50
   scan:
     localRepoPath: /tmp/cscanner/git-repo/
     workerCount: 5

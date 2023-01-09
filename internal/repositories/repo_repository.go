@@ -41,7 +41,8 @@ func (r *repoRepository) ListRepo(paging *models.Paging) ([]*models.Repo, int, e
 			Desc: true,
 		})
 	})
-	tx = buildPaging(tx, r.conf, paging)
+	paging.SetFallback(r.conf.App.Paging)
+	tx = buildPaging(tx, paging)
 	if result := tx.Find(&rows); result.Error != nil {
 		return nil, 0, result.Error
 	}
