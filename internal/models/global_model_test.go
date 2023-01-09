@@ -4,40 +4,31 @@ import (
 	"testing"
 
 	"github.com/dan-kest/cscanner/config"
-)
-
-var (
-	conf = config.Config{
-		App: &config.App{
-			Paging: &config.Paging{
-				MaxItemPerPage: 20,
-			},
-		},
-	}
+	"github.com/dan-kest/cscanner/pkg/tests"
 )
 
 func TestIsSortDesc(t *testing.T) {
-	tests := []struct {
+	testList := []struct {
 		name   string
 		paging Paging
 		result bool
 	}{
 		{
-			name: "TestIsSortDesc__SortOrderEmpty",
+			name: "TestIsSortDesc::SortOrderEmpty",
 			paging: Paging{
 				SortOrder: "",
 			},
 			result: false,
 		},
 		{
-			name: "TestIsSortDesc__SortOrderRandomWord",
+			name: "TestIsSortDesc::SortOrderRandomWord",
 			paging: Paging{
 				SortOrder: "asdf",
 			},
 			result: false,
 		},
 		{
-			name: "TestIsSortDesc__SortOrderMixedCase",
+			name: "TestIsSortDesc::SortOrderMixedCase",
 			paging: Paging{
 				SortOrder: "dEsC",
 			},
@@ -45,24 +36,27 @@ func TestIsSortDesc(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range testList {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.paging.IsSortDesc()
-			if result != tt.result {
-				t.Errorf("got '%t', want '%t'", result, tt.result)
+			if err := tests.CompareField(result, tt.result, nil); err != nil {
+				t.Error(err)
 			}
 		})
 	}
 }
 
 func TestSetFallback(t *testing.T) {
-	tests := []struct {
+	conf := config.ReadDummy()
+	conf.App.Paging.MaxItemPerPage = 20
+
+	testList := []struct {
 		name   string
 		paging Paging
 		result Paging
 	}{
 		{
-			name: "TestSetFallback__Page=0",
+			name: "TestSetFallback::Page=0",
 			paging: Paging{
 				Page: 0,
 			},
@@ -71,7 +65,7 @@ func TestSetFallback(t *testing.T) {
 			},
 		},
 		{
-			name: "TestSetFallback__Page<0",
+			name: "TestSetFallback::Page<0",
 			paging: Paging{
 				Page: -4,
 			},
@@ -80,7 +74,7 @@ func TestSetFallback(t *testing.T) {
 			},
 		},
 		{
-			name: "TestSetFallback__ItemPerPage<0",
+			name: "TestSetFallback::ItemPerPage<0",
 			paging: Paging{
 				Page:        1,
 				ItemPerPage: -2,
@@ -91,7 +85,7 @@ func TestSetFallback(t *testing.T) {
 			},
 		},
 		{
-			name: "TestSetFallback__ItemPerPage>Max",
+			name: "TestSetFallback::ItemPerPage>Max",
 			paging: Paging{
 				Page:        1,
 				ItemPerPage: 50,
@@ -102,7 +96,7 @@ func TestSetFallback(t *testing.T) {
 			},
 		},
 		{
-			name: "TestSetFallback__MixedConfig",
+			name: "TestSetFallback::MixedConfig",
 			paging: Paging{
 				Page:        3,
 				ItemPerPage: 50,
@@ -113,7 +107,7 @@ func TestSetFallback(t *testing.T) {
 			},
 		},
 		{
-			name: "TestSetFallback__MixedConfigReverse",
+			name: "TestSetFallback::MixedConfigReverse",
 			paging: Paging{
 				Page:        -2,
 				ItemPerPage: 5,
@@ -125,14 +119,14 @@ func TestSetFallback(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range testList {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.paging.SetFallback(conf.App.Paging)
-			if tt.paging.Page != tt.result.Page {
-				t.Errorf("Page: got '%d', want '%d'", tt.paging.Page, tt.result.Page)
+			if err := tests.CompareField(tt.paging.Page, tt.result.Page, "Page"); err != nil {
+				t.Error(err)
 			}
-			if tt.paging.ItemPerPage != tt.result.ItemPerPage {
-				t.Errorf("ItemPerPage: got '%d', want '%d'", tt.paging.ItemPerPage, tt.result.ItemPerPage)
+			if err := tests.CompareField(tt.paging.ItemPerPage, tt.result.ItemPerPage, "ItemPerPage"); err != nil {
+				t.Error(err)
 			}
 		})
 	}
