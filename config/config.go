@@ -24,8 +24,8 @@ type Scan struct {
 	LocalRepoPath string
 	WorkerCount   int
 	WordDelimiter string
-	FindingRule   []FindingRule
 	Ignore        string
+	FindingRule   []FindingRule
 }
 
 type FindingRule struct {
@@ -64,6 +64,11 @@ func Read() *Config {
 
 	viper.SetConfigFile("config/config.yaml")
 	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
+
+	viper.SetConfigFile("config/rule.yaml")
+	if err := viper.MergeInConfig(); err != nil {
 		panic(err)
 	}
 

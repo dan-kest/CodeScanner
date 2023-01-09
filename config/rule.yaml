@@ -1,0 +1,13 @@
+app:
+  scan:
+    findingRule:
+      - type: public_key
+        match: prefix
+        ruleID: G402
+        description: Exposed sensitive information.
+        severity: HIGH
+      - type: private_key
+        match: prefix
+        ruleID: G402
+        description: Exposed sensitive information.
+        severity: HIGH
