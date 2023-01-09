@@ -27,8 +27,7 @@ func NewScanHandler(conf *config.Config, qConn *amqp091.Connection, scanService 
 }
 
 func (h *ScanHandler) GetTask() {
-	// ===== Connect to message queue =====
-
+	// Connect to message queue
 	ch, err := h.qConn.Channel()
 	failOnError(constants.RabbitMQErrorOpenChannel, err)
 	defer ch.Close()
@@ -55,8 +54,7 @@ func (h *ScanHandler) GetTask() {
 	)
 	failOnError(constants.RabbitMQErrorConsume, err)
 
-	// ===== Start consumer =====
-
+	// Start consumer
 	var forever chan struct{}
 
 	go func() {

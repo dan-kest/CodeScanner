@@ -23,7 +23,19 @@ type Paging struct {
 }
 
 type Scan struct {
-	RepoPath string
+	RepoPath      string
+	WorkerCount   int
+	WordDelimiter string
+	FindingRule   []FindingRule
+	Ignore        string
+}
+
+type FindingRule struct {
+	Type        string
+	Match       string
+	RuleID      string
+	Description string
+	Severity    string
 }
 
 type Postgres struct {

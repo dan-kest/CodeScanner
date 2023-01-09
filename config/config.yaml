@@ -4,6 +4,20 @@ app:
     maxItemPerPage: 20
   scan:
     repoPath: /tmp/cscanner/git-repo/
+    workerCount: 5
+    wordDelimiter: ' ' # Single character only, represent a byte.
+    findingRule:
+      - type: public_key
+        match: prefix
+        ruleID: G402
+        description: Exposed sensitive information.
+        severity: HIGH
+      - type: private_key
+        match: prefix
+        ruleID: G402
+        description: Exposed sensitive information.
+        severity: HIGH
+    ignore: .git,.vscode,.idea
 
 postgres:
   host: localhost

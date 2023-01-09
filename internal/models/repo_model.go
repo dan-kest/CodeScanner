@@ -16,12 +16,12 @@ type RepoPagination struct {
 }
 
 type Repo struct {
-	ID         uuid.UUID
-	Name       null.String
-	URL        null.String
-	ScanStatus constants.ScanStatus
-	Findings   []*Finding `json:"findings"`
-	Timestamp  *time.Time
+	ID         uuid.UUID            `json:"-"`
+	Name       null.String          `json:"-"`
+	URL        null.String          `json:"-"`
+	ScanStatus constants.ScanStatus `json:"-"`
+	Findings   []*Finding           `json:"findings"`
+	Timestamp  *time.Time           `json:"-"`
 }
 
 type Finding struct {

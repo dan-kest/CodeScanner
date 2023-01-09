@@ -36,3 +36,14 @@ const (
 const (
 	MIMETypeApplicationJSON = "application/json"
 )
+
+const (
+	DefaultScanDelimiter = ' '
+)
+
+const (
+	FindingRuleMatchPrefix  = "prefix"
+	FindingRuleMatchSuffix  = "suffix"
+	FindingRuleMatchWhole   = "whole"
+	FindingRuleMatchPartial = "partial"
+)
