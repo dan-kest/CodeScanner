@@ -6,8 +6,7 @@ type RepoRequest struct {
 }
 
 type ScanRequest struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+	ID string `json:"id"`
 }
 
 type GenericResponse struct {

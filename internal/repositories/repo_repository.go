@@ -115,6 +115,30 @@ func (r *repoRepository) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 	return repo, nil
 }
 
+// Quick data fetch, return as lean as possible.
+func (r *repoRepository) FetchRepo(id uuid.UUID) (*models.Repo, error) {
+	row := tables.Repository{}
+
+	tx := database.WithTimeout(r.dbConn)
+
+	if result := tx.First(&row, id); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("id %s", constants.ErrorNotFoundSuffix)
+		}
+
+		return nil, result.Error
+	}
+
+	repo := &models.Repo{
+		ID: row.ID,
+	}
+	if row.URL.Valid {
+		repo.URL = &row.URL.String
+	}
+
+	return repo, nil
+}
+
 func (r *repoRepository) CreateRepo(repo *models.Repo) (*uuid.UUID, error) {
 	row := tables.Repository{}
 	if repo.Name != nil {

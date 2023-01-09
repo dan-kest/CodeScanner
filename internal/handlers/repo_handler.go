@@ -154,15 +154,8 @@ func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 		return sendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
-	messageList := []string{}
 	if payload.ID == "" {
-		messageList = append(messageList, "id is required")
-	}
-	if payload.URL == "" {
-		messageList = append(messageList, "url is required")
-	}
-	if len(messageList) > 0 {
-		return sendError(ctx, fiber.StatusBadRequest, strings.Join(messageList, ","))
+		return sendError(ctx, fiber.StatusBadRequest, "id is required")
 	}
 
 	id, err := uuid.Parse(payload.ID)
@@ -172,10 +165,20 @@ func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 
 	scanID := uuid.New()
 
+	repo, err := h.repoService.FetchRepo(id)
+	if err != nil {
+		statusCode := fiber.StatusInternalServerError
+		if strings.HasSuffix(err.Error(), constants.ErrorNotFoundSuffix) {
+			statusCode = fiber.StatusNotFound
+		}
+
+		return sendError(ctx, statusCode, err.Error())
+	}
+
 	task := &models.Task{
 		RepositoryIDStr: payload.ID,
 		ScanIDStr:       scanID.String(),
-		URL:             payload.URL,
+		URL:             *repo.URL,
 		Timestamp:       time.Now().UTC().Format(time.RFC3339),
 	}
 	body, err := json.Marshal(task)

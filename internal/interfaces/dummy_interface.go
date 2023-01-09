@@ -36,6 +36,14 @@ func (r *DummyRepoRepositoryFail) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 	return nil, errors.New("")
 }
 
+func (r *DummyRepoRepositorySuccess) FetchRepo(id uuid.UUID) (*models.Repo, error) {
+	return &models.Repo{}, nil
+}
+
+func (r *DummyRepoRepositoryFail) FetchRepo(id uuid.UUID) (*models.Repo, error) {
+	return nil, errors.New("")
+}
+
 func (r *DummyRepoRepositorySuccess) CreateRepo(repo *models.Repo) (*uuid.UUID, error) {
 	id := uuid.New()
 

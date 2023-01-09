@@ -47,6 +47,16 @@ func (s *RepoService) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 	return repo, nil
 }
 
+// Quick data fetch before scan.
+func (s *RepoService) FetchRepo(id uuid.UUID) (*models.Repo, error) {
+	repo, err := s.repoRepository.FetchRepo(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return repo, nil
+}
+
 func (s *RepoService) ScanRepo(id uuid.UUID, scanID uuid.UUID) error {
 	task := &models.Task{
 		RepositoryID: id,
