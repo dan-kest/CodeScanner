@@ -1,7 +1,12 @@
 package tests
 
 import (
+	"errors"
 	"fmt"
+)
+
+var (
+	ErrNoResult = errors.New("result expected: got no result")
 )
 
 func CompareField(got interface{}, want interface{}, name interface{}) error {

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dan-kest/cscanner/config"
+	"github.com/dan-kest/cscanner/internal/constants"
 	"github.com/dan-kest/cscanner/internal/interfaces"
 	"github.com/dan-kest/cscanner/internal/models"
 	"github.com/dan-kest/cscanner/pkg/tests"
@@ -82,6 +83,63 @@ func TestRunErrorTask(t *testing.T) {
 			err := service.RunErrorTask(tt.body, tt.err)
 			if err := tests.CompareError(tt.wantErr, err, tt.resultErr); err != nil {
 				t.Error(err)
+			}
+		})
+	}
+}
+
+func TestMatchFindingRule(t *testing.T) {
+	testList := []struct {
+		name        string
+		findingRule []config.FindingRule
+		word        string
+	}{
+		{
+			name: "TestMatchFindingRule::Prefix",
+			findingRule: []config.FindingRule{
+				{
+					Match: constants.FindingRuleMatchPrefix,
+					Type:  "God",
+				},
+			},
+			word: "GodEmperor",
+		},
+		{
+			name: "TestMatchFindingRule::Suffix",
+			findingRule: []config.FindingRule{
+				{
+					Match: constants.FindingRuleMatchSuffix,
+					Type:  "Emperor",
+				},
+			},
+			word: "GodEmperor",
+		},
+		{
+			name: "TestMatchFindingRule::Whole",
+			findingRule: []config.FindingRule{
+				{
+					Match: constants.FindingRuleMatchWhole,
+					Type:  "GodEmperor",
+				},
+			},
+			word: "GodEmperor",
+		},
+		{
+			name: "TestMatchFindingRule::Partial",
+			findingRule: []config.FindingRule{
+				{
+					Match: constants.FindingRuleMatchPartial,
+					Type:  "dEmpe",
+				},
+			},
+			word: "GodEmperor",
+		},
+	}
+
+	for _, tt := range testList {
+		t.Run(tt.name, func(t *testing.T) {
+			if result := matchFindingRule(tt.findingRule, tt.word); result == nil {
+				t.Error(tests.ErrNoResult)
 			}
 		})
 	}

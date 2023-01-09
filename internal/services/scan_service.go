@@ -223,7 +223,7 @@ func scanFile(fullPath string, repoPath string) ([]*models.Finding, error) {
 		for _, word := range wordList {
 			word := strings.TrimSpace(string(word))
 			if word != "" {
-				finding := matchFindingRule(word)
+				finding := matchFindingRule(findingRule, word)
 				if finding != nil {
 					finding.Location = models.FindingLocation{
 						Path: repoPath,
@@ -244,7 +244,7 @@ func scanFile(fullPath string, repoPath string) ([]*models.Finding, error) {
 }
 
 // Check if input word is matches with any rules, returns models.Finding stuct.
-func matchFindingRule(word string) *models.Finding {
+func matchFindingRule(findingRule []config.FindingRule, word string) *models.Finding {
 	for _, rule := range findingRule {
 		isMatch := false
 		switch strings.ToLower(rule.Match) {
