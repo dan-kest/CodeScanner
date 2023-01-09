@@ -33,16 +33,16 @@
   }
 }
 ```
-| Name        | Type     | Description                   |
-|-------------|----------|-------------------------------|
-| page        | Number   | Current page                  |
-| item_count  | Number   | Item shown per page           |
-| total_count | Number   | Total item count (all pages)  |
-| id          | String   | Repository ID                 |
-| name        | String   | Repository Name               |
-| url         | String   | Repository URL                |
-| scan_status | String   | Latest scan status            |
-| timestamp   | String   | Latest scan status timestamp  |
+| Name        | Nullable | Type   | Description                   |
+|-------------|----------|--------|-------------------------------|
+| page        | No       | Number | Current page                  |
+| item_count  | No       | Number | Item shown per page           |
+| total_count | No       | Number | Total item count (all pages)  |
+| id          | No       | String | Repository ID                 |
+| name        | No       | String | Repository Name               |
+| url         | No       | String | Repository URL                |
+| scan_status | Yes      | String | Latest scan status            |
+| timestamp   | Yes      | String | Latest scan status timestamp  |
 
 `400` Invalid Request
 ```json
@@ -106,14 +106,14 @@ ______________________________
   }
 }
 ```
-| Name        | Type     | Description                   |
-|-------------|----------|-------------------------------|
-| id          | String   | Repository ID                 |
-| name        | String   | Repository Name               |
-| url         | String   | Repository URL                |
-| scan_status | String   | Latest scan status            |
-| timestamp   | String   | Latest scan status timestamp  |
-| findings    | Array    | Array of success scan results |
+| Name        | Nullable | Type     | Description                   |
+|-------------|----------|----------|-------------------------------|
+| id          | No       | String   | Repository ID                 |
+| name        | No       | String   | Repository Name               |
+| url         | No       | String   | Repository URL                |
+| scan_status | Yes      | String   | Latest scan status            |
+| timestamp   | Yes      | String   | Latest scan status timestamp  |
+| findings    | Yes      | Array    | Array of success scan results |
 
 `400` Invalid Request
 ```json
@@ -202,9 +202,9 @@ ______________________________
   "data": "ee592d7a-9022-11ed-92be-0242c0a81002"
 }
 ```
-| Name        | Type     | Description                 |
-|-------------|----------|-----------------------------|
-| data        | String   | Created repository ID       |
+| Name        | Nullable | Type     | Description                 |
+|-------------|----------|----------|-----------------------------|
+| data        | No       | String   | Created repository ID       |
 
 `400` Invalid Request
 ```json
