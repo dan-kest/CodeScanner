@@ -79,7 +79,7 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 		Data: payloads.ListRepoResponse{
 			Page:        repoPagination.Page,
 			ItemPerPage: repoPagination.ItemPerPage,
-			TotalCount:  repoPagination.ItemPerPage,
+			TotalCount:  repoPagination.TotalCount,
 			ItemList:    itemList,
 		},
 	})
