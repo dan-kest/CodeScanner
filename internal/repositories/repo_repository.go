@@ -108,9 +108,7 @@ func (r *repoRepository) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 
 		scanResult := row.ScanHistoryList[0].ScanResult
 		if scanResult != nil && scanResult.Result != "" {
-			if err := json.Unmarshal([]byte(scanResult.Result), repo); err != nil {
-				return nil, err
-			}
+			_ = json.Unmarshal([]byte(scanResult.Result), repo)
 		}
 	}
 
