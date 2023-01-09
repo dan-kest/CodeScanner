@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/dan-kest/cscanner/config"
+	"github.com/dan-kest/cscanner/internal/constants"
 	"github.com/dan-kest/cscanner/internal/interfaces"
 	"github.com/dan-kest/cscanner/internal/models"
 	"github.com/google/uuid"
@@ -50,7 +51,7 @@ func (s *RepoService) ScanRepo(id uuid.UUID, scanID uuid.UUID) error {
 	task := &models.Task{
 		RepositoryID: id,
 		ScanID:       scanID,
-		Status:       models.ScanStatusQueued,
+		Status:       constants.ScanStatusQueued,
 	}
 
 	return s.scanRepository.CreateScanHistory(task)

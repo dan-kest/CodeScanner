@@ -54,7 +54,7 @@ func (r *repoRepository) ListRepo(paging *models.Paging) ([]*models.Repo, int, e
 			URL:  row.URL,
 		}
 		if len(row.ScanHistoryList) > 0 {
-			repo.ScanStatus = models.ScanStatus(row.ScanHistoryList[0].Status)
+			repo.ScanStatus = constants.ScanStatus(row.ScanHistoryList[0].Status)
 			repo.Timestamp = &row.ScanHistoryList[0].CreatedAt
 		}
 
@@ -92,7 +92,7 @@ func (r *repoRepository) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 		URL:  row.URL,
 	}
 	if len(row.ScanHistoryList) > 0 {
-		repo.ScanStatus = models.ScanStatus(row.ScanHistoryList[0].Status)
+		repo.ScanStatus = constants.ScanStatus(row.ScanHistoryList[0].Status)
 		repo.Timestamp = &row.ScanHistoryList[0].CreatedAt
 
 		scanResult := row.ScanHistoryList[0].ScanResult

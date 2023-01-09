@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/dan-kest/cscanner/internal/constants"
 	"github.com/dan-kest/cscanner/pkg/null"
 	"github.com/google/uuid"
 )
@@ -18,19 +19,10 @@ type Repo struct {
 	ID         uuid.UUID
 	Name       null.String
 	URL        null.String
-	ScanStatus ScanStatus
+	ScanStatus constants.ScanStatus
 	Findings   []*Finding `json:"findings"`
 	Timestamp  *time.Time
 }
-
-type ScanStatus string
-
-const (
-	ScanStatusQueued     ScanStatus = "Queued"
-	ScanStatusInProgress ScanStatus = "In Progress"
-	ScanStatusSuccess    ScanStatus = "Success"
-	ScanStatusFailure    ScanStatus = "Failure"
-)
 
 type Finding struct {
 	Type     string          `json:"type"`
