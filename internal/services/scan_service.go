@@ -70,31 +70,19 @@ func (s *ScanService) RunTask(task *models.Task) error {
 	// Clone/Pull git repository to prepare for scan
 	path := s.conf.App.Scan.LocalRepoPath + task.RepositoryIDStr
 	if err := cloneOrPullRepo(path, task.URL); err != nil {
-		if err := s.scanRepository.CreateScanHistoryAndResult(task, err.Error()); err != nil {
-			return err
-		}
-
-		return err
+		return s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
 	}
 
 	// Scan repository
 	workerCount := s.conf.App.Scan.WorkerCount
 	repo, err := scanRepo(task.RepositoryID, path, workerCount)
 	if err != nil {
-		if err := s.scanRepository.CreateScanHistoryAndResult(task, err.Error()); err != nil {
-			return err
-		}
-
-		return err
+		return s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
 	}
 
 	result, err := json.Marshal(repo)
 	if err != nil {
-		if err := s.scanRepository.CreateScanHistoryAndResult(task, err.Error()); err != nil {
-			return err
-		}
-
-		return err
+		return s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
 	}
 
 	// Save scan result with status "Success"
@@ -124,6 +112,10 @@ func cloneOrPullRepo(path string, url string) error {
 		if err := workingDir.Pull(&git.PullOptions{
 			Progress: os.Stdout,
 		}); err != nil {
+			if errors.Is(err, git.NoErrAlreadyUpToDate) {
+				return nil
+			}
+
 			return err
 		}
 	} else if err != nil {
