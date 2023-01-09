@@ -154,6 +154,17 @@ func (h *RepoHandler) ScanRepo(ctx *fiber.Ctx) error {
 		return sendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
+	messageList := []string{}
+	if payload.ID == "" {
+		messageList = append(messageList, "id is required")
+	}
+	if payload.URL == "" {
+		messageList = append(messageList, "url is required")
+	}
+	if len(messageList) > 0 {
+		return sendError(ctx, fiber.StatusBadRequest, strings.Join(messageList, ","))
+	}
+
 	id, err := uuid.Parse(payload.ID)
 	if err != nil {
 		return sendError(ctx, fiber.StatusBadRequest, "invalid id")
@@ -189,6 +200,17 @@ func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
 	payload := &payloads.RepoRequest{}
 	if err := ctx.BodyParser(payload); err != nil {
 		return sendError(ctx, fiber.StatusBadRequest, err.Error())
+	}
+
+	messageList := []string{}
+	if payload.Name == nil || *payload.Name == "" {
+		messageList = append(messageList, "name is required")
+	}
+	if payload.URL == nil || *payload.URL == "" {
+		messageList = append(messageList, "url is required")
+	}
+	if len(messageList) > 0 {
+		return sendError(ctx, fiber.StatusBadRequest, strings.Join(messageList, ","))
 	}
 
 	repo := &models.Repo{
