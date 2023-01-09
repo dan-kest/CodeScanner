@@ -1,8 +1,6 @@
 package config
 
 import (
-	"strings"
-
 	"github.com/spf13/viper"
 )
 
@@ -65,12 +63,12 @@ func Read() *Config {
 	conf := &Config{}
 
 	viper.SetConfigFile("config/config.yaml")
-	viper.AutomaticEnv()
-
-	// For env variables, so it would be like MYSQL_HOST
-	viper.SetEnvKeyReplacer(strings.NewReplacer(`.`, `_`))
-
 	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
+
+	viper.SetConfigFile("config/secret.yaml")
+	if err := viper.MergeInConfig(); err != nil {
 		panic(err)
 	}
 

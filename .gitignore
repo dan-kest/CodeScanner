@@ -31,3 +31,4 @@ vendor
 
 # Sensitive files
 *.env
+secret.yaml

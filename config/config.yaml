@@ -20,19 +20,10 @@ app:
     ignore: .git,.vscode,.idea
 
 postgres:
-  host: localhost
-  port: 5432
-  database: db
-  username: root
-  password: password
   connectionTimeout: 60000
   isPrintLog: true
 
 rabbitmq:
-  host: localhost
-  port: 5672
-  username: guest
-  password: guest
   publishTimeout: 5000
   queue:
     name: scanner
