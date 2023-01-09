@@ -3,7 +3,7 @@ app:
   paging:
     maxItemPerPage: 20
   scan:
-    repoPath: /tmp/cscanner/git-repo/
+    localRepoPath: /tmp/cscanner/git-repo/
     workerCount: 5
     wordDelimiter: ' ' # Single character only, represent a byte.
     findingRule:

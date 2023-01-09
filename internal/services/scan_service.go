@@ -17,12 +17,14 @@ import (
 	"github.com/dan-kest/cscanner/internal/interfaces"
 	"github.com/dan-kest/cscanner/internal/models"
 	git "github.com/go-git/go-git/v5"
+	"github.com/google/uuid"
 )
 
 var (
 	// Channel act as a job pool for scan workers
 	jobs          chan string
 	wordDelimiter string
+	localRepoPath string
 	findingRule   []config.FindingRule
 	ignore        string
 	wg            sync.WaitGroup
@@ -43,6 +45,7 @@ func NewScanService(conf *config.Config, scanRepository interfaces.ScanRepositor
 		wordDelimiter = string(byteArray[:1])
 	}
 
+	localRepoPath = conf.App.Scan.LocalRepoPath
 	findingRule = conf.App.Scan.FindingRule
 	ignore = conf.App.Scan.Ignore
 
@@ -62,7 +65,7 @@ func (s *ScanService) RunTask(task *models.Task) error {
 	task.Status = constants.ScanStatusFailure
 
 	// Clone/Pull git repository to prepare for scan
-	path := s.conf.App.Scan.RepoPath + task.RepositoryIDStr
+	path := s.conf.App.Scan.LocalRepoPath + task.RepositoryIDStr
 	if err := cloneOrPullRepo(path, task.URL); err != nil {
 		s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
 
@@ -71,7 +74,7 @@ func (s *ScanService) RunTask(task *models.Task) error {
 
 	// Scan repository
 	workerCount := s.conf.App.Scan.WorkerCount
-	repo, err := scanRepo(path, workerCount)
+	repo, err := scanRepo(task.RepositoryID, path, workerCount)
 	if err != nil {
 		s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
 
@@ -121,9 +124,10 @@ func cloneOrPullRepo(path string, url string) error {
 }
 
 // Run repository code scan.
-func scanRepo(path string, workerCount int) (*models.Repo, error) {
+func scanRepo(id uuid.UUID, path string, workerCount int) (*models.Repo, error) {
 	var mu *sync.Mutex = &sync.Mutex{}
 	repo := &models.Repo{
+		ID:       id,
 		Findings: []*models.Finding{},
 	}
 
@@ -178,7 +182,8 @@ func loopRepoFiles(path string) error {
 // First argument is an instance of Mutex shared among scan workers.
 func scanWorker(mu *sync.Mutex, repo *models.Repo) error {
 	for fullPath := range jobs {
-		findingList, err := scanFile(fullPath)
+		repoPath := strings.Replace(fullPath, localRepoPath+repo.ID.String(), "", 1)
+		findingList, err := scanFile(fullPath, repoPath)
 		if err != nil {
 			wg.Done()
 			return err
@@ -195,7 +200,7 @@ func scanWorker(mu *sync.Mutex, repo *models.Repo) error {
 }
 
 // File read & words scan.
-func scanFile(fullPath string) ([]*models.Finding, error) {
+func scanFile(fullPath string, repoPath string) ([]*models.Finding, error) {
 	findingList := []*models.Finding{}
 
 	file, err := os.Open(fullPath)
@@ -225,7 +230,7 @@ func scanFile(fullPath string) ([]*models.Finding, error) {
 				finding := matchFindingRule(word)
 				if finding != nil {
 					finding.Location = models.FindingLocation{
-						Path: fullPath,
+						Path: repoPath,
 						Positions: models.FindingLocationPosition{
 							Begin: models.FindingLocationPositionBegin{
 								Line: lineCount,

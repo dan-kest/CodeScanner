@@ -23,7 +23,7 @@ type Paging struct {
 }
 
 type Scan struct {
-	RepoPath      string
+	LocalRepoPath string
 	WorkerCount   int
 	WordDelimiter string
 	FindingRule   []FindingRule
