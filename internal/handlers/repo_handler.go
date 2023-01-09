@@ -53,18 +53,24 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 		return sendError(ctx, fiber.StatusInternalServerError, err.Error())
 	}
 
-	itemList := []*payloads.RepoResponse{}
+	itemList := []*payloads.ListRepoResponseItem{}
 	for _, item := range repoPagination.ItemList {
-		timestamp := ""
-		if item.Timestamp != nil {
-			timestamp = item.Timestamp.Format(time.RFC3339)
+		var scanStatus *string
+		var timestamp *string
+
+		if item.ScanStatus != "" {
+			scanStatus = (*string)(&item.ScanStatus)
 		}
-		itemList = append(itemList, &payloads.RepoResponse{
+		if item.Timestamp != nil {
+			s := item.Timestamp.Format(time.RFC3339)
+			timestamp = &s
+		}
+		itemList = append(itemList, &payloads.ListRepoResponseItem{
 			ID:         item.ID.String(),
 			Name:       item.Name.String(),
 			URL:        item.URL.String(),
-			ScanStatus: (*string)(&item.ScanStatus),
-			Timestamp:  &timestamp,
+			ScanStatus: scanStatus,
+			Timestamp:  timestamp,
 		})
 	}
 
@@ -118,19 +124,25 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 			})
 		}
 	}
-	var timestamp string
+	var scanStatus *string
+	var timestamp *string
+
+	if repo.ScanStatus != "" {
+		scanStatus = (*string)(&repo.ScanStatus)
+	}
 	if repo.Timestamp != nil {
-		timestamp = repo.Timestamp.Format(time.RFC3339)
+		t := repo.Timestamp.Format(time.RFC3339)
+		timestamp = &t
 	}
 
 	return ctx.JSON(payloads.GenericResponse{
 		Status: constants.ResponseStatusOK,
-		Data: payloads.RepoResponse{
+		Data: payloads.ViewRepoResponse{
 			ID:         repo.ID.String(),
 			Name:       repo.Name.String(),
 			URL:        repo.URL.String(),
-			ScanStatus: (*string)(&repo.ScanStatus),
-			Timestamp:  &timestamp,
+			ScanStatus: scanStatus,
+			Timestamp:  timestamp,
 			Findings:   findingList,
 		},
 	})

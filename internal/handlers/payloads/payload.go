@@ -17,13 +17,21 @@ type GenericResponse struct {
 }
 
 type ListRepoResponse struct {
-	Page        int             `json:"page"`
-	ItemPerPage int             `json:"item_count"`
-	TotalCount  int             `json:"total_count"`
-	ItemList    []*RepoResponse `json:"item_list"`
+	Page        int                     `json:"page"`
+	ItemPerPage int                     `json:"item_count"`
+	TotalCount  int                     `json:"total_count"`
+	ItemList    []*ListRepoResponseItem `json:"item_list"`
 }
 
-type RepoResponse struct {
+type ListRepoResponseItem struct {
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	URL        string  `json:"url"`
+	ScanStatus *string `json:"scan_status"`
+	Timestamp  *string `json:"timestamp"`
+}
+
+type ViewRepoResponse struct {
 	ID         string     `json:"id"`
 	Name       string     `json:"name"`
 	URL        string     `json:"url"`
