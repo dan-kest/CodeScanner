@@ -55,7 +55,10 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 
 	itemList := []*payloads.RepoResponse{}
 	for _, item := range repoPagination.ItemList {
-		timestamp := item.Timestamp.Format(time.RFC3339)
+		timestamp := ""
+		if item.Timestamp != nil {
+			timestamp = item.Timestamp.Format(time.RFC3339)
+		}
 		itemList = append(itemList, &payloads.RepoResponse{
 			ID:         item.ID.String(),
 			Name:       item.Name.String(),
