@@ -1,0 +1,89 @@
+# Refer to golangci-lint's example config file for more options and information:
+# https://github.com/golangci/golangci-lint/blob/master/.golangci.example.yml
+
+run:
+  go: '1.17'
+  timeout: 5m
+  modules-download-mode: readonly
+  skip-files:
+    - ".*\\.gen\\.go$"
+  skip-dirs:
+    - cmd
+    - vendor
+
+linters:
+  disable:
+    - lll
+  enable:
+    - unused
+    - errcheck
+    - revive
+    - govet
+    - staticcheck
+    - gosec
+    - gosimple
+    - ineffassign
+    - structcheck
+    - typecheck
+    - decorder
+    - depguard
+    - durationcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - goconst
+    - gocognit
+    - gocritic
+    - gomnd
+    - gomoddirectives
+    - grouper
+    - ifshort
+    - importas
+    - ireturn
+    - maintidx
+    - makezero
+    - misspell
+    - nakedret
+    - nilerr
+    - nlreturn
+    - unparam
+    - unconvert
+    - whitespace
+
+linters-settings:
+  gocognit:
+      min-complexity: 100
+  revive:
+    ignoreGeneratedHeader: false
+    severity: warning
+    confidence: 0.8
+    errorCode: 0
+    warningCode: 0
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

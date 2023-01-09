@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 )
 
-// Extention of sql.NullString for more generic usage.
+// Extension of sql.NullString for more generic usage.
 type String struct {
 	Val   string
 	valid bool
@@ -50,6 +50,7 @@ func (i *String) Scan(value interface{}) error {
 	if value == nil {
 		i.Val = ""
 		i.valid = false
+
 		return nil
 	}
 
@@ -58,11 +59,13 @@ func (i *String) Scan(value interface{}) error {
 	if err := ns.Scan(value); err != nil {
 		i.Val = ""
 		i.valid = false
+
 		return err
 	}
 
 	i.Val = ns.String
 	i.valid = ns.Valid
+
 	return nil
 }
 

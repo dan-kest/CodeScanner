@@ -29,8 +29,8 @@ func NewScanHandler(conf *config.Config, qConn *amqp091.Connection, scanService 
 func (h *ScanHandler) GetTask() {
 	// Connect to message queue
 	ch, err := h.qConn.Channel()
-	failOnError(constants.RabbitMQErrorOpenChannel, err)
-	defer ch.Close()
+	failOnError(constants.ErrorRabbitMQOpenChannel, err)
+	defer ch.Close() // nolint
 
 	queueName := h.conf.RabbitMQ.Queue.Name
 	q, err := ch.QueueDeclare(
@@ -41,7 +41,7 @@ func (h *ScanHandler) GetTask() {
 		false,     // no-wait
 		nil,       // arguments
 	)
-	failOnError(constants.RabbitMQErrorDeclareQueue, err)
+	failOnError(constants.ErrorRabbitMQDeclareQueue, err)
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
@@ -52,7 +52,7 @@ func (h *ScanHandler) GetTask() {
 		false,  // no-wait
 		nil,    // args
 	)
-	failOnError(constants.RabbitMQErrorConsume, err)
+	failOnError(constants.ErrorRabbitMQConsume, err)
 
 	// Start consumer
 	var forever chan struct{}
@@ -61,11 +61,13 @@ func (h *ScanHandler) GetTask() {
 		for d := range msgs {
 			h.handleTask(d.Body)
 
-			d.Ack(false)
+			if err := d.Ack(false); err != nil {
+				failOnError(constants.ErrorRabbitMQAcknowledge, err)
+			}
 		}
 	}()
 
-	log.Printf(constants.RabbitMQWaitingPrompt)
+	log.Printf(constants.MessageRabbitMQWaitingPrompt)
 	<-forever
 }
 
@@ -93,11 +95,13 @@ func (h *ScanHandler) handleTask(body []byte) {
 	}
 	task.ScanID = scanID
 
-	h.scanService.RunTask(&task)
+	if err := h.scanService.RunTask(&task); err != nil {
+		h.handleErrorTask(body, err)
+	}
 }
 
 func (h *ScanHandler) handleErrorTask(body []byte, err error) {
 	if err = h.scanService.RunErrorTask(body, err); err != nil {
-		log.Panicf("Error task failed: %s", err)
+		log.Panicf("%s: %s", constants.ErrorTaskFailed, err)
 	}
 }

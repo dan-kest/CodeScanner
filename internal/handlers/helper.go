@@ -32,7 +32,7 @@ func publishMessage(qConn *amqp.Connection, queueName string, body []byte, timeo
 	if err != nil {
 		return err
 	}
-	defer ch.Close()
+	defer ch.Close() // nolint
 
 	q, err := ch.QueueDeclare(
 		queueName, // name

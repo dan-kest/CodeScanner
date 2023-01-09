@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,7 +60,9 @@ func NewScanService(conf *config.Config, scanRepository interfaces.ScanRepositor
 func (s *ScanService) RunTask(task *models.Task) error {
 	// Save scan status to "In Progress"
 	task.Status = constants.ScanStatusInProgress
-	s.scanRepository.CreateScanHistory(task)
+	if err := s.scanRepository.CreateScanHistory(task); err != nil {
+		return err
+	}
 
 	// Default scan status to "Failure" in case of error
 	task.Status = constants.ScanStatusFailure
@@ -67,7 +70,9 @@ func (s *ScanService) RunTask(task *models.Task) error {
 	// Clone/Pull git repository to prepare for scan
 	path := s.conf.App.Scan.LocalRepoPath + task.RepositoryIDStr
 	if err := cloneOrPullRepo(path, task.URL); err != nil {
-		s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
+		if err := s.scanRepository.CreateScanHistoryAndResult(task, err.Error()); err != nil {
+			return err
+		}
 
 		return err
 	}
@@ -76,34 +81,37 @@ func (s *ScanService) RunTask(task *models.Task) error {
 	workerCount := s.conf.App.Scan.WorkerCount
 	repo, err := scanRepo(task.RepositoryID, path, workerCount)
 	if err != nil {
-		s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
+		if err := s.scanRepository.CreateScanHistoryAndResult(task, err.Error()); err != nil {
+			return err
+		}
 
 		return err
 	}
 
 	result, err := json.Marshal(repo)
 	if err != nil {
-		s.scanRepository.CreateScanHistoryAndResult(task, err.Error())
+		if err := s.scanRepository.CreateScanHistoryAndResult(task, err.Error()); err != nil {
+			return err
+		}
 
 		return err
 	}
 
 	// Save scan result with status "Success"
 	task.Status = constants.ScanStatusSuccess
-	s.scanRepository.CreateScanHistoryAndResult(task, string(result))
 
-	return nil
+	return s.scanRepository.CreateScanHistoryAndResult(task, string(result))
 }
 
 // Run git clone to temporary path. If already cloned, pull instead.
 // Limited to public repo only for the time being.
 func cloneOrPullRepo(path string, url string) error {
-	gitRepo, err := git.PlainClone(path, false, &git.CloneOptions{
+	_, err := git.PlainClone(path, false, &git.CloneOptions{
 		URL:      url,
 		Progress: os.Stdout,
 	})
 	if errors.Is(err, git.ErrRepositoryAlreadyExists) {
-		gitRepo, err = git.PlainOpen(path)
+		gitRepo, err := git.PlainOpen(path)
 		if err != nil {
 			return err
 		}
@@ -113,9 +121,11 @@ func cloneOrPullRepo(path string, url string) error {
 			return err
 		}
 
-		workingDir.Pull(&git.PullOptions{
+		if err := workingDir.Pull(&git.PullOptions{
 			Progress: os.Stdout,
-		})
+		}); err != nil {
+			return err
+		}
 	} else if err != nil {
 		return err
 	}
@@ -125,7 +135,7 @@ func cloneOrPullRepo(path string, url string) error {
 
 // Run repository code scan.
 func scanRepo(id uuid.UUID, path string, workerCount int) (*models.Repo, error) {
-	var mu *sync.Mutex = &sync.Mutex{}
+	mu := &sync.Mutex{}
 	repo := &models.Repo{
 		ID:       id,
 		Findings: []*models.Finding{},
@@ -137,7 +147,10 @@ func scanRepo(id uuid.UUID, path string, workerCount int) (*models.Repo, error) 
 	}
 
 	// Start looping files and directories in repository
-	loopRepoFiles(path)
+	if err := loopRepoFiles(path); err != nil {
+		return nil, err
+	}
+
 	wg.Wait()
 
 	return repo, nil
@@ -165,14 +178,16 @@ func loopRepoFiles(path string) error {
 			continue
 		}
 
+		wg.Add(1)
 		go func() {
-			wg.Add(1)
 			jobs <- fullPath
 		}()
 	}
 
 	for _, fullPath := range directoryList {
-		loopRepoFiles(fullPath)
+		if err := loopRepoFiles(fullPath); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -180,13 +195,13 @@ func loopRepoFiles(path string) error {
 
 // Worker. Wait for a job from job pool then execute file scan.
 // First argument is an instance of Mutex shared among scan workers.
-func scanWorker(mu *sync.Mutex, repo *models.Repo) error {
+func scanWorker(mu *sync.Mutex, repo *models.Repo) {
 	for fullPath := range jobs {
 		repoPath := strings.Replace(fullPath, localRepoPath+repo.ID.String(), "", 1)
 		findingList, err := scanFile(fullPath, repoPath)
 		if err != nil {
 			wg.Done()
-			return err
+			log.Panicf("Scam worker error: %s", err)
 		}
 
 		mu.Lock()
@@ -195,16 +210,14 @@ func scanWorker(mu *sync.Mutex, repo *models.Repo) error {
 
 		wg.Done()
 	}
-
-	return nil
 }
 
 // File read & words scan.
 func scanFile(fullPath string, repoPath string) ([]*models.Finding, error) {
 	findingList := []*models.Finding{}
 
-	file, err := os.Open(fullPath)
-	defer file.Close()
+	file, err := os.Open(filepath.Clean(fullPath))
+	defer file.Close() // nolint
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +233,7 @@ func scanFile(fullPath string, repoPath string) ([]*models.Finding, error) {
 			return nil, err
 		}
 		if !isNotEndOfLine {
-			lineCount += 1
+			lineCount++
 		}
 
 		wordList := bytes.Split(line, []byte(wordDelimiter))
