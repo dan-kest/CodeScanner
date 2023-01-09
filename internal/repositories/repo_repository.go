@@ -49,10 +49,15 @@ func (r *repoRepository) ListRepo(paging *models.Paging) ([]*models.Repo, int, e
 	repoList := []*models.Repo{}
 	for _, row := range rows {
 		repo := &models.Repo{
-			ID:   row.ID,
-			Name: row.Name,
-			URL:  row.URL,
+			ID: row.ID,
 		}
+		if row.Name.Valid {
+			repo.Name = &row.Name.String
+		}
+		if row.URL.Valid {
+			repo.URL = &row.URL.String
+		}
+
 		if len(row.ScanHistoryList) > 0 {
 			repo.ScanStatus = constants.ScanStatus(row.ScanHistoryList[0].Status)
 			repo.Timestamp = &row.ScanHistoryList[0].CreatedAt
@@ -87,10 +92,15 @@ func (r *repoRepository) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 	}
 
 	repo := &models.Repo{
-		ID:   row.ID,
-		Name: row.Name,
-		URL:  row.URL,
+		ID: row.ID,
 	}
+	if row.Name.Valid {
+		repo.Name = &row.Name.String
+	}
+	if row.URL.Valid {
+		repo.URL = &row.URL.String
+	}
+
 	if len(row.ScanHistoryList) > 0 {
 		repo.ScanStatus = constants.ScanStatus(row.ScanHistoryList[0].Status)
 		repo.Timestamp = &row.ScanHistoryList[0].CreatedAt
@@ -107,9 +117,14 @@ func (r *repoRepository) ViewRepo(id uuid.UUID) (*models.Repo, error) {
 }
 
 func (r *repoRepository) CreateRepo(repo *models.Repo) (*uuid.UUID, error) {
-	row := tables.Repository{
-		Name: repo.Name,
-		URL:  repo.URL,
+	row := tables.Repository{}
+	if repo.Name != nil {
+		row.Name.String = *repo.Name
+		row.Name.Valid = true
+	}
+	if repo.URL != nil {
+		row.URL.String = *repo.URL
+		row.URL.Valid = true
 	}
 
 	tx := database.WithTimeout(r.dbConn)
@@ -126,9 +141,14 @@ func (r *repoRepository) UpdateRepo(id uuid.UUID, repo *models.Repo) error {
 		ID: id,
 	}
 
-	row := tables.Repository{
-		Name: repo.Name,
-		URL:  repo.URL,
+	row := tables.Repository{}
+	if repo.Name != nil {
+		row.Name.String = *repo.Name
+		row.Name.Valid = true
+	}
+	if repo.URL != nil {
+		row.URL.String = *repo.URL
+		row.URL.Valid = true
 	}
 
 	tx := database.WithTimeout(r.dbConn)

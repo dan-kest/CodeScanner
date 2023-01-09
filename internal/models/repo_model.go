@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/dan-kest/cscanner/internal/constants"
-	"github.com/dan-kest/cscanner/pkg/null"
 	"github.com/google/uuid"
 )
 
@@ -17,8 +16,8 @@ type RepoPagination struct {
 
 type Repo struct {
 	ID         uuid.UUID            `json:"-"`
-	Name       null.String          `json:"-"`
-	URL        null.String          `json:"-"`
+	Name       *string              `json:"-"`
+	URL        *string              `json:"-"`
 	ScanStatus constants.ScanStatus `json:"-"`
 	Findings   []*Finding           `json:"findings"`
 	Timestamp  *time.Time           `json:"-"`

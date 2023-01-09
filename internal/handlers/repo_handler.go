@@ -67,8 +67,8 @@ func (h *RepoHandler) ListRepo(ctx *fiber.Ctx) error {
 		}
 		itemList = append(itemList, &payloads.ListRepoResponseItem{
 			ID:         item.ID.String(),
-			Name:       item.Name.String(),
-			URL:        item.URL.String(),
+			Name:       *item.Name,
+			URL:        *item.URL,
 			ScanStatus: scanStatus,
 			Timestamp:  timestamp,
 		})
@@ -139,8 +139,8 @@ func (h *RepoHandler) ViewRepo(ctx *fiber.Ctx) error {
 		Status: constants.ResponseStatusOK,
 		Data: payloads.ViewRepoResponse{
 			ID:         repo.ID.String(),
-			Name:       repo.Name.String(),
-			URL:        repo.URL.String(),
+			Name:       *repo.Name,
+			URL:        *repo.URL,
 			ScanStatus: scanStatus,
 			Timestamp:  timestamp,
 			Findings:   findingList,
@@ -191,12 +191,9 @@ func (h *RepoHandler) CreateRepo(ctx *fiber.Ctx) error {
 		return sendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
-	repo := &models.Repo{}
-	if payload.Name != nil {
-		repo.Name.Set(*payload.Name)
-	}
-	if payload.URL != nil {
-		repo.URL.Set(*payload.URL)
+	repo := &models.Repo{
+		Name: payload.Name,
+		URL:  payload.URL,
 	}
 
 	id, err := h.repoService.CreateRepo(repo)
@@ -222,12 +219,9 @@ func (h *RepoHandler) UpdateRepo(ctx *fiber.Ctx) error {
 		return sendError(ctx, fiber.StatusBadRequest, err.Error())
 	}
 
-	repo := &models.Repo{}
-	if payload.Name != nil {
-		repo.Name.Set(*payload.Name)
-	}
-	if payload.URL != nil {
-		repo.URL.Set(*payload.URL)
+	repo := &models.Repo{
+		Name: payload.Name,
+		URL:  payload.URL,
 	}
 
 	if err := h.repoService.UpdateRepo(id, repo); err != nil {
