@@ -3,9 +3,9 @@ app:
   paging:
     maxItemPerPage: 50
   scan:
-    localRepoPath: /tmp/cscanner/git-repo/
-    workerCount: 5
-    ignore: .git,.vscode,.idea # Comma delimited
+    localRepoPath: /tmp/cscanner/git-repo/ # !!IMPORTANT!! should change to some empty path in your local machine
+    workerCount: 5 # More workers mean more file scanning at the same time
+    ignore: .git,.vscode,.idea # Comma delimited; file to ignore for scanner
 
 postgres:
   connectionTimeout: 60000
