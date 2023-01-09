@@ -40,7 +40,7 @@ const (
 )
 
 const (
-	DefaultScanDelimiter = ' '
+	ScanWordDelimiter = " "
 )
 
 const (

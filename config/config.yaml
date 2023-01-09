@@ -5,7 +5,6 @@ app:
   scan:
     localRepoPath: /tmp/cscanner/git-repo/
     workerCount: 5
-    wordDelimiter: ' ' # Single byte character only
     ignore: .git,.vscode,.idea # Comma delimited
 
 postgres:

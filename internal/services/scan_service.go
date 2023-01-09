@@ -24,7 +24,6 @@ import (
 var (
 	// Channel act as a job pool for scan workers
 	jobs          chan string
-	wordDelimiter string
 	localRepoPath string
 	findingRule   []config.FindingRule
 	ignore        string
@@ -38,14 +37,6 @@ type ScanService struct {
 
 func NewScanService(conf *config.Config, scanRepository interfaces.ScanRepository) *ScanService {
 	jobs = make(chan string)
-
-	// If configured delimiter is invalid (More than 1 byte), fallback to a default delimiter
-	wordDelimiter = conf.App.Scan.WordDelimiter
-	byteArray := []byte(wordDelimiter)
-	if len(byteArray) > 1 {
-		wordDelimiter = string(byteArray[:1])
-	}
-
 	localRepoPath = conf.App.Scan.LocalRepoPath
 	findingRule = conf.App.Scan.FindingRule
 	ignore = conf.App.Scan.Ignore
@@ -228,7 +219,7 @@ func scanFile(fullPath string, repoPath string) ([]*models.Finding, error) {
 			lineCount++
 		}
 
-		wordList := bytes.Split(line, []byte(wordDelimiter))
+		wordList := bytes.Split(line, []byte(constants.ScanWordDelimiter))
 		for _, word := range wordList {
 			word := strings.TrimSpace(string(word))
 			if word != "" {

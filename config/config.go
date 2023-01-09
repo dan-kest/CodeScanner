@@ -23,7 +23,6 @@ type Paging struct {
 type Scan struct {
 	LocalRepoPath string
 	WorkerCount   int
-	WordDelimiter string
 	Ignore        string
 	FindingRule   []FindingRule
 }
@@ -82,4 +81,20 @@ func Read() *Config {
 	}
 
 	return conf
+}
+
+// For testing, returns empty struct with no nil values.
+func ReadDummy() *Config {
+	return &Config{
+		App: &App{
+			Paging: &Paging{},
+			Scan: &Scan{
+				FindingRule: []FindingRule{},
+			},
+		},
+		Postgres: &Postgres{},
+		RabbitMQ: &RabbitMQ{
+			Queue: &Queue{},
+		},
+	}
 }
